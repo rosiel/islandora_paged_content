@@ -87,4 +87,21 @@ class PDFToTextTestCase extends DrupalWebTestCase {
     $full_text_uri = islandora_paged_content_extract_text_from_pdf($test_pdf, 1);
     $this->assertFalse($full_text_uri, 'No text extraction was returned for a non-existent PDF.');
   }
+
+  /**
+   * Test that pdfinfo is available.
+   */
+  public function testPDFToTextDoesNotExecuteIfBadPath() {
+    $pdftotext_old = variable_get('islandora_paged_content_pdftotext', '/usr/bin/pdftotext');
+    variable_set('islandora_paged_content_pdftotext', '/islandora/paged/content/foo');
+    $test_mcgill_pdf = drupal_get_path('module', 'islandora_paged_content') . '/tests/fixtures/2010.08.25_McGill_Librarians.pdf';
+    $full_text_uri = islandora_paged_content_extract_text_from_pdf($test_mcgill_pdf, 4);
+    if ($full_text_uri) {
+      $this->fail('Pdftotext was run, even though the path was not an executable.');
+    }
+    else {
+      $this->pass('extract_text_from_pdf aborted when the path was not an executable.');
+    }
+    variable_set('islandora_paged_content_pdftotext', $pdftotext_old);
+  }
 }

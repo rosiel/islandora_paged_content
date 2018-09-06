@@ -38,7 +38,7 @@ function islandora_paged_content_admin_settings_form(array $form, array &$form_s
         '#type' => 'textfield',
         '#title' => t('gs (GhostScript)'),
         '#description' => t('GhostScript is used to combine PDF files into a representation of a book or newspaper.<br/>!msg',
-                        array('!msg' => islandora_executable_available_message($gs))),
+                        array('!msg' => islandora_paged_content_get_gs_path_validation_message($gs))),
         '#default_value' => $gs,
         '#prefix' => '<div id="gs-wrapper">',
         '#suffix' => '</div>',
@@ -58,7 +58,7 @@ function islandora_paged_content_admin_settings_form(array $form, array &$form_s
         '#title' => t('pdfinfo'),
         '#description' => t('Pdfinfo is used to extract information needed when ingesting a single PDF into paged content and individual page objects.<br/>!msg',
           array(
-            '!msg' => islandora_executable_available_message($pdfinfo),
+            '!msg' => islandora_paged_content_get_pdfinfo_path_validation_message($pdfinfo),
           )
         ),
         '#default_value' => $pdfinfo,
@@ -76,7 +76,7 @@ function islandora_paged_content_admin_settings_form(array $form, array &$form_s
         '#title' => t('pdftotext'),
         '#description' => t('Pdftotext is used to extract text for OCR when ingesting a single PDF into paged content and individual page objects.<br/>!msg',
           array(
-            '!msg' => islandora_executable_available_message($pdftotext),
+            '!msg' => islandora_paged_content_get_pdftotext_path_validation_message($pdftotext),
           )
         ),
         '#default_value' => $pdftotext,
@@ -194,6 +194,54 @@ function islandora_paged_content_admin_settings_form_executable_available_messag
   trigger_error(filter_xss($message), E_USER_DEPRECATED);
 
   return islandora_executable_available_message($path, $version, $required_version);
+}
+
+/**
+ * Gets a user-friendly message to show if the gs path seems valid.
+ *
+ * @param string $path
+ *   Path to gs executable.
+ *
+ * @return string
+ *   An HTML message that can be displayed to the user.
+ */
+function islandora_paged_content_get_gs_path_validation_message($path) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+  $errors = islandora_paged_content_validate_path_to_gs($path);
+  return islandora_get_path_validation_markup($errors, $path);
+}
+
+/**
+ * Gets a user-friendly message to show if the pdfinfo path seems valid.
+ *
+ * @param string $path
+ *   Path to pdfinfo executable.
+ *
+ * @return string
+ *   An HTML message that can be displayed to the user.
+ */
+function islandora_paged_content_get_pdfinfo_path_validation_message($path) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+  $errors = islandora_paged_content_validate_path_to_pdfinfo($path);
+  return islandora_get_path_validation_markup($errors, $path);
+}
+
+/**
+ * Gets a user-friendly message to show if the pdftotext path seems valid.
+ *
+ * @param string $path
+ *   Path to pdftotext executable.
+ *
+ * @return string
+ *   An HTML message that can be displayed to the user.
+ */
+function islandora_paged_content_get_pdftotext_path_validation_message($path) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+  $errors = islandora_paged_content_validate_path_to_pdftotext($path);
+  return islandora_get_path_validation_markup($errors, $path);
 }
 
 /**

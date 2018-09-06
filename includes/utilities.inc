@@ -450,9 +450,27 @@ function islandora_paged_content_can_create_pdf() {
  *   TRUE if it is possible, FALSE otherwise.
  */
 function islandora_paged_content_can_combine_pdf() {
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
   $gs = variable_get('islandora_paged_content_gs', '/usr/bin/gs');
-  return is_executable($gs);
+  $errors = islandora_paged_content_validate_path_to_gs($gs);
+  return empty($errors);
 }
+
+/**
+ * Validates whether the ghostscript path may be executed.
+ *
+ * @param string $path
+ *   Path to an executable
+ *
+ * @return array
+ *   Errors encountered when testing the file. If it returns an empty array,
+ *   then the file appears to be an executable.
+ */
+function islandora_paged_content_validate_path_to_gs($path) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  return islandora_validate_path_to_binary($path);
+}
+
 
 /**
  * Appends onto a given PDF file a number of PDF files.
@@ -1066,8 +1084,25 @@ function islandora_paged_content_parse_pages_to_move($pages_to_move) {
  *   TRUE if it's available, FALSE if not.
  */
 function islandora_paged_content_pdftotext_availability() {
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
   $pdftotext = variable_get('islandora_paged_content_pdftotext', '/usr/bin/pdftotext');
-  return is_executable($pdftotext);
+  $errors = islandora_paged_content_validate_path_to_pdftotext($pdftotext);
+  return empty($errors);
+}
+
+/**
+ * Validates whether the pdftotext path may be executed.
+ *
+ * @param string $path
+ *   Path to an executable
+ *
+ * @return array
+ *   Errors encountered when testing the file. If it returns an empty array,
+ *   then the file appears to be an executable.
+ */
+function islandora_paged_content_validate_path_to_pdftotext($path) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  return islandora_validate_path_to_binary($path);
 }
 
 /**
@@ -1077,8 +1112,25 @@ function islandora_paged_content_pdftotext_availability() {
  *   TRUE if it's available, FALSE if not.
  */
 function islandora_paged_content_pdfinfo_availability() {
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
   $pdfinfo = variable_get('islandora_paged_content_pdfinfo', '/usr/bin/pdfinfo');
-  return is_executable($pdfinfo);
+  $errors = islandora_paged_content_validate_path_to_pdfinfo($pdfinfo);
+  return empty($errors);
+}
+
+/**
+ * Validates whether the pdfinfo path may be executed.
+ *
+ * @param string $path
+ *   Path to an executable
+ *
+ * @return array
+ *   Errors encountered when testing the file. If it returns an empty array,
+ *   then the file appears to be an executable.
+ */
+function islandora_paged_content_validate_path_to_pdfinfo($path) {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  return islandora_validate_path_to_binary($path);
 }
 
 /**
@@ -1099,12 +1151,22 @@ function islandora_paged_content_pdfinfo_availability() {
  *   FALSE if it fails, the URI of the text file otherwise.
  */
 function islandora_paged_content_extract_text_from_pdf($uri, $offset, $layout = TRUE, $raw_text = FALSE) {
+  module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
   $file_path = drupal_realpath($uri);
-  // PDF doesn't exist or pdftotext isn't available, abort.
-  if (!file_exists($file_path) || !islandora_paged_content_pdftotext_availability()) {
+
+  // PDF doesn't exist, abort.
+  if (!file_exists($file_path)) {
     return FALSE;
   }
+
   $pdftotext = variable_get('islandora_paged_content_pdftotext', '/usr/bin/pdftotext');
+  // Pdftotext isn't executable, abort.
+  $errors = islandora_paged_content_validate_path_to_pdftotext($pdftotext);
+  if (!empty($errors)) {
+    watchdog('islandora_paged_content', array_merge($errors), array(),WATCHDOG_ERROR);
+    return FALSE;
+  }
+
   $base_command = '!pdftotext_path !raw !layout -f !offset -l !offset !pdf_uri !output_file';
   $output_file = drupal_tempnam('temporary://', 'full');
 
